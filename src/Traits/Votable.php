@@ -48,17 +48,53 @@ trait Votable
 
     public function scopeWithTotalVotes(Builder $builder)
     {
-        return $builder->withSum('votes as IFNULL(total_votes,0)', 'votes');
+        return $builder->addSelect(
+            \DB::raw(sprintf(
+                'cast(ifnull((select sum(`%s`.`votes`)
+                                        from `votes` where %s = `%s`.`votable_id`
+                                        and `%s`.`votable_type` = "%s"), 0) as SIGNED)
+                            as `total_votes`',
+                config('vote.votes_table'),
+                $this->getTable() . '.' . $this->getKeyName(),
+                config('vote.votes_table'),
+                config('vote.votes_table'),
+                $this->getTable()
+            ))
+        );
     }
 
     public function scopeWithTotalUpVotes(Builder $builder)
     {
-        return $builder->withSum(['votes as IFNULL(total_up_votes,0)' => fn ($q) => $q->where('votes', '>', 0)], 'votes');
+        return $builder->addSelect(
+            \DB::raw(sprintf(
+                'cast(ifnull((select sum(`%s`.`votes`)
+                                        from `votes` where `votes` > 0 and %s = `%s`.`votable_id`
+                                        and `%s`.`votable_type` = "%s"), 0) as SIGNED)
+                            as `total_votes`',
+                config('vote.votes_table'),
+                $this->getTable() . '.' . $this->getKeyName(),
+                config('vote.votes_table'),
+                config('vote.votes_table'),
+                $this->getTable()
+            ))
+        );
     }
 
     public function scopeWithTotalDownVotes(Builder $builder)
     {
-        return $builder->withSum(['votes as IFNULL(total_down_votes,0)' => fn ($q) => $q->where('votes', '<', 0)], 'votes');
+        return $builder->addSelect(
+            \DB::raw(sprintf(
+                'cast(ifnull((select sum(`%s`.`votes`)
+                                        from `votes` where `votes` < 0 and %s = `%s`.`votable_id`
+                                        and `%s`.`votable_type` = "%s"), 0) as SIGNED)
+                            as `total_votes`',
+                config('vote.votes_table'),
+                $this->getTable() . '.' . $this->getKeyName(),
+                config('vote.votes_table'),
+                config('vote.votes_table'),
+                $this->getTable()
+            ))
+        );
     }
 
     public function voters()
