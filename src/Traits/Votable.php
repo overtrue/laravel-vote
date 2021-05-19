@@ -33,22 +33,32 @@ trait Votable
 
     public function totalVotes()
     {
-        return $this->morphMany(config('vote.vote_model'), 'votable')->selectRaw('SUM(votes) as total')->groupBy('votable_id');
+        return $this->votes()->sum('votes');
+    }
+
+    public function totalUpVotes()
+    {
+        return $this->votes()->where('votes', '>', 0)->sum('votes');
+    }
+
+    public function totalDownVotes()
+    {
+        return $this->votes()->where('votes', '<', 0)->sum('votes');
     }
 
     public function scopeWithTotalVotes(Builder $builder)
     {
-        return $builder->withSum('votes as total_votes', 'votes');
+        return $builder->withSum('votes as IFNULL(total_votes)', 'votes');
     }
 
     public function scopeWithTotalUpVotes(Builder $builder)
     {
-        return $builder->withSum(['votes as total_up_votes' => fn ($q) => $q->where('votes', '>', 0)], 'votes');
+        return $builder->withSum(['votes as IFNULL(total_up_votes, 0)' => fn ($q) => $q->where('votes', '>', 0)], 'votes');
     }
 
     public function scopeWithTotalDownVotes(Builder $builder)
     {
-        return $builder->withSum(['votes as total_down_votes' => fn ($q) => $q->where('votes', '<', 0)], 'votes');
+        return $builder->withSum(['votes, 0 as IFNULL(total_down_votes, 0)' => fn ($q) => $q->where('votes', '<', 0)], 'votes');
     }
 
     public function voters()
