@@ -58,7 +58,7 @@ trait Votable
 
     public function scopeWithTotalDownVotes(Builder $builder)
     {
-        return $builder->withSum(['votes, 0 as IFNULL(total_down_votes, 0)' => fn ($q) => $q->where('votes', '<', 0)], 'votes');
+        return $builder->withSum(['votes as IFNULL(total_down_votes, 0)' => fn ($q) => $q->where('votes', '<', 0)], 'votes');
     }
 
     public function voters()
