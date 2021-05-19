@@ -48,17 +48,17 @@ trait Votable
 
     public function scopeWithTotalVotes(Builder $builder)
     {
-        return $builder->withSum('votes as ifnull(total_votes, 0)', 'votes');
+        return $builder->withSum('votes as ifnull(total_votes,0)', 'votes');
     }
 
     public function scopeWithTotalUpVotes(Builder $builder)
     {
-        return $builder->withSum(['votes as ifnull(total_up_votes, 0)' => fn ($q) => $q->where('votes', '>', 0)], 'votes');
+        return $builder->withSum(['votes as ifnull(total_up_votes,0)' => fn ($q) => $q->where('votes', '>', 0)], 'votes');
     }
 
     public function scopeWithTotalDownVotes(Builder $builder)
     {
-        return $builder->withSum(['votes as ifnull(total_down_votes, 0)' => fn ($q) => $q->where('votes', '<', 0)], 'votes');
+        return $builder->withSum(['votes as ifnull(total_down_votes,0)' => fn ($q) => $q->where('votes', '<', 0)], 'votes');
     }
 
     public function voters()
