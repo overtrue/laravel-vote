@@ -1,33 +1,38 @@
 Laravel Vote
 ---
 
-❤️ User Vote feature for Laravel Application.
+❤️ User vote feature for Laravel Application.
 
-![CI](https://github.com/overtrue/laravel-Vote/workflows/CI/badge.svg)
+![CI](https://github.com/overtrue/laravel-vote/workflows/CI/badge.svg)
 
 
 ## Installing
 
 ```shell
-$ composer require overtrue/laravel-Vote -vvv
+$ composer require overtrue/laravel-vote -vvv
 ```
 
 ### Configuration
 
 This step is optional
 
-```php
+```bash
 $ php artisan vendor:publish --provider="Overtrue\\LaravelVote\\VoteServiceProvider" --tag=config
 ```
 
 ### Migrations
 
-This step is also optional, if you want to custom Votes table, you can publish the migration files:
+This step is required, you can publish the migration files:
 
-```php
+```bash
 $ php artisan vendor:publish --provider="Overtrue\\LaravelVote\\VoteServiceProvider" --tag=migrations
 ```
 
+then create tables: 
+
+```bash
+$ php artisan migrate
+```
 
 ## Usage
 
@@ -54,11 +59,11 @@ class User extends Authenticatable
 
 ```php
 use Illuminate\Database\Eloquent\Model;
-use Overtrue\LaravelVote\Traits\Voteable;
+use Overtrue\LaravelVote\Traits\Votable;
 
-class Post extends Model
+class Idea extends Model
 {
-    use Voteable;
+    use Votable;
 
     <...>
 }
@@ -68,60 +73,102 @@ class Post extends Model
 
 ```php
 $user = User::find(1);
-$post = Post::find(2);
+$idea = Idea::find(2);
 
-$user->Vote($post);
-$user->unVote($post);
-$user->toggleVote($post);
-$user->getVoteItems(Post::class)
+$user->vote($idea);
+$user->upVote($idea);
+$user->downVote($idea);
 
-$user->hasVoted($post); 
-$post->isVotedBy($user); 
+// with custom number of votes
+$user->upVote($idea, 3);
+$user->downVote($idea, 3);
+
+// cancel vote
+$user->cancelVote($idea);
+
+// get my voted items
+$user->getVotedItems(Idea::class) // Illuminate\Database\Eloquent\Builder
+
+// state
+$user->hasVoted($idea); 
+$idea->hasBeenVotedBy($user); 
 ```
 
-#### Get object Voters:
+#### Get model voters:
 
 ```php
-foreach($post->Voters as $user) {
+foreach($idea->voters as $user) {
     // echo $user->name;
 }
 ```
 
-#### Get Vote Model from User.
-Used Voter Trait Model can easy to get Voteable Models to do what you want.
-*note: this method will return a `Illuminate\Database\Eloquent\Builder` *
-```php
-$user->getVoteItems(Post::class);
+#### Get user voted items.
 
-// Do more
-$favortePosts = $user->getVoteItems(Post::class)->get();
-$favortePosts = $user->getVoteItems(Post::class)->paginate();
-$favortePosts = $user->getVoteItems(Post::class)->where('title', 'Laravel-Vote')->get();
+User can easy to get Votable models to do what you want.
+
+*note: this method will return a `Illuminate\Database\Eloquent\Builder` *
+
+```php
+$votedItemsQuery = $user->getVotedItems();
+
+// filter votable_type
+$votedIdeasQuery = $user->getVotedItems(Idea::class);
+
+// fetch results
+$votedIdeas = $user->getVoteItems(Idea::class)->get();
+$votedIdeas = $user->getVoteItems(Idea::class)->paginate();
+$votedIdeas = $user->getVoteItems(Idea::class)->where('title', 'Laravel-Vote')->get();
 ```
 
 ### Aggregations
 
+### count relations
 ```php
 // all
-$user->Votes()->count(); 
+$user->votes()->count(); 
 
-// with type
-$user->Votes()->withType(Post::class)->count(); 
+// filter votable_type
+$user->votes()->ofType(Idea::class)->count(); 
 
-// Voters count
-$post->Voters()->count();
+// voters count
+$idea->voters()->count();
 ```
 
 List with `*_count` attribute:
 
 ```php
-$users = User::withCount('Votes')->get();
+// for Voter models:
+$users = User::withCount('votes')->get();
 
 foreach($users as $user) {
-    echo $user->Votes_count;
+    echo $user->votes_count;
+}
+
+// for Votable models: 
+$ideas = Idea::withCount('voters')->get();
+
+foreach($ideas as $idea) {
+    echo $idea->voters_count;
 }
 ```
 
+### Votable sum votes
+
+```php
+$user1->upVote($idea); // 1 (up)
+$user2->upVote($idea); // 2 (up)
+$user3->upVote($idea); // 3 (up)
+$user4->downVote($idea); // -1 (down)
+
+// sum(votes)
+$idea->getTotalVotes(); // 2(3 - 1)
+
+// sum(votes) where votes > 0
+$idea->getTotalUpVotes(); // 3
+
+// abs(sum(votes)) where votes < 0
+$idea->getTotalDownVotes(); // 1
+```
 
 ### N+1 issue
 
@@ -129,37 +176,59 @@ To avoid the N+1 issue, you can use eager loading to reduce this operation to ju
 
 ```php
 // Voter
-$users = App\User::with('Votes')->get();
+$users = App\Models\User::with('votes')->get();
 
 foreach($users as $user) {
-    $user->hasVoted($post);
+    $user->hasVoted($idea);
 }
 
-// Voteable
-$posts = App\Post::with('Votes')->get();
-// or 
-$posts = App\Post::with('Voters')->get();
+// Votable
+$ideas = App\Models\Idea::with('voters')->get();
 
-foreach($posts as $post) {
-    $post->isVotedBy($user);
+foreach($ideas as $idea) {
+    $idea->hasBeenVotedBy($user);
 }
+
+// Votable votes
+$ideas = App\Models\Idea::withTotalVotes() // total_votes
+        ->withTotalUpVotes() // total_up_votes
+        ->withTotalDownVotes() // total_down_votes
+        ->get();
+//[
+//  0 => array:7 [
+//    "id" => 1
+//    "title" => "Add socialite login support."
+//    "created_at" => "2021-05-19T07:01:10.000000Z"
+//    "updated_at" => "2021-05-19T07:01:10.000000Z"
+//    "total_votes" => "2"
+//    "total_up_votes" => "3"
+//    "total_down_votes" => "1"
+//  ]
+//  1 => array:7 [
+//    "id" => 2
+//    "title" => "Add PHP8 support."
+//    "created_at" => "2021-05-20T07:01:10.000000Z"
+//    "updated_at" => "2021-05-20T07:01:10.000000Z"
+//    "total_votes" => "1"
+//    "total_up_votes" => "2"
+//    "total_down_votes" => "1"
+//  ]
+//]
 ```
-
 
 ### Events
 
 | **Event** | **Description** |
 | --- | --- |
 |  `Overtrue\LaravelVote\Events\Voted` | Triggered when the relationship is created. |
-|  `Overtrue\LaravelVote\Events\UnVoted` | Triggered when the relationship is deleted. |
+|  `Overtrue\LaravelVote\Events\VoteCancelled` | Triggered when the relationship is deleted. |
 
 ## Related packages
 
 - Follow: [overtrue/laravel-follow](https://github.com/overtrue/laravel-follow)
 - Like: [overtrue/laravel-like](https://github.com/overtrue/laravel-like)
-- Vote: [overtrue/laravel-Vote](https://github.com/overtrue/laravel-Vote)
+- Vote: [overtrue/laravel-vote](https://github.com/overtrue/laravel-Vote)
 - Subscribe: [overtrue/laravel-subscribe](https://github.com/overtrue/laravel-subscribe)
-- Vote: overtrue/laravel-vote (working in progress)
 - Bookmark: overtrue/laravel-bookmark (working in progress)
 
 

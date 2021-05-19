@@ -2,20 +2,17 @@
 
 namespace Overtrue\LaravelVote\Events;
 
-use Illuminate\Database\Eloquent\Model;
+use Overtrue\LaravelVote\Vote;
 
 class Event
 {
-    /**
-     * @var \Illuminate\Database\Eloquent\Model
-     */
-    public $vote;
+    public Vote $vote;
 
     /**
      * Event constructor.
      */
-    public function __construct(Model $vote)
+    public function __construct(Vote $vote)
     {
-        $this->Vote = $vote;
+        $this->vote = $vote;
     }
 }

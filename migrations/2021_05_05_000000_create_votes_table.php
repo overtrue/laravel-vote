@@ -14,7 +14,8 @@ class CreateVotesTable extends Migration
         Schema::create(config('vote.votes_table'), function (Blueprint $table) {
             $table->bigIncrements('id');
             $table->unsignedBigInteger(config('vote.user_foreign_key'))->index()->comment('user_id');
-            $table->morphs('Voteable');
+            $table->integer('votes');
+            $table->morphs('votable');
             $table->timestamps();
         });
     }

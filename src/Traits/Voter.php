@@ -9,22 +9,37 @@ use Illuminate\Database\Eloquent\Model;
  */
 trait Voter
 {
-    public function Vote(Model $object)
+    public function upVote(Model $object, int $votes = 1)
     {
-        /* @var \Overtrue\LaravelVote\Traits\Voteable $object */
-        if (!$this->hasVoted($object)) {
-            $vote = app(config('vote.vote_model'));
-            $vote->{config('vote.user_foreign_key')} = $this->getKey();
-
-            $object->Votes()->save($vote);
+        /* @var Votable|Model $object */
+        if ($this->hasVoted($object)) {
+            $this->cancelVote($object);
         }
+
+        $vote = app(config('vote.vote_model'));
+        $vote->{config('vote.user_foreign_key')} = $this->getKey();
+        $vote->votes = abs($votes);
+        $object->votes()->save($vote);
     }
 
-    public function unVote(Model $object)
+    public function downVote(Model $object, int $votes = 1)
     {
-        /* @var \Overtrue\LaravelVote\Traits\Voteable $object */
-        $relation = $object->Votes()
-            ->where('Voteable_id', $object->getKey())
+        /* @var Votable|Model $object */
+        if ($this->hasVoted($object)) {
+            $this->cancelVote($object);
+        }
+
+        $vote = app(config('vote.vote_model'));
+        $vote->{config('vote.user_foreign_key')} = $this->getKey();
+        $vote->votes = abs($votes) * -1;
+        $object->votes()->save($vote);
+    }
+
+    public function cancelVote(Model $object)
+    {
+        /* @var Votable|Model $object */
+        $relation = $object->votes()
+            ->where('votable_id', $object->getKey())
             ->where('votable_type', $object->getMorphClass())
             ->where(config('vote.user_foreign_key'), $this->getKey())
             ->first();
@@ -34,39 +49,23 @@ trait Voter
         }
     }
 
-    public function toggleVote(Model $object)
+    public function hasVoted(Model $object): bool
     {
-        $this->hasVoted($object) ? $this->unVote($object) : $this->Vote($object);
-    }
-
-    /**
-     * @return bool
-     */
-    public function hasVoted(Model $object)
-    {
-        return ($this->relationLoaded('Votes') ? $this->Votes : $this->Votes())
-            ->where('Voteable_id', $object->getKey())
+        return ($this->relationLoaded('votes') ? $this->votes : $this->votes())
+            ->where('votable_id', $object->getKey())
             ->where('votable_type', $object->getMorphClass())
             ->count() > 0;
     }
 
-    /**
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
-     */
-    public function Votes()
+    public function votes(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
         return $this->hasMany(config('vote.vote_model'), config('vote.user_foreign_key'), $this->getKeyName());
     }
 
-    /**
-     * Get Query Builder for Votes
-     *
-     * @return Illuminate\Database\Eloquent\Builder
-     */
-    public function getVoteItems(string $model)
+    public function getVotedItems(string $model)
     {
         return app($model)->whereHas(
-            'Voters',
+            'voters',
             function ($q) {
                 return $q->where(config('vote.user_foreign_key'), $this->getKey());
             }

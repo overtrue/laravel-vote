@@ -3,11 +3,11 @@
 namespace Tests;
 
 use Illuminate\Database\Eloquent\Model;
-use Overtrue\LaravelVote\Traits\Voteable;
+use Overtrue\LaravelVote\Traits\Votable;
 
-class Book extends Model
+class Feature extends Model
 {
-    use Voteable;
+    use Votable;
 
     protected $fillable = ['title'];
 }
