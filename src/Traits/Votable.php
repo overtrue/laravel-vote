@@ -48,7 +48,7 @@ trait Votable
 
     public function scopeWithTotalVotes(Builder $builder)
     {
-        return $builder->withSum('votes as IFNULL(total_votes)', 'votes');
+        return $builder->withSum('votes as IFNULL(total_votes, 0)', 'votes');
     }
 
     public function scopeWithTotalUpVotes(Builder $builder)
