@@ -162,13 +162,13 @@ $user3->upVote($idea); // 3 (up)
 $user4->downVote($idea); // -1 (down)
 
 // sum(votes)
-$idea->getTotalVotes(); // 2(3 - 1)
+$idea->totalVotes(); // 2(3 - 1)
 
 // sum(votes) where votes > 0
-$idea->getTotalUpVotes(); // 3
+$idea->totalUpVotes(); // 3
 
 // abs(sum(votes)) where votes < 0
-$idea->getTotalDownVotes(); // 1
+$idea->totalDownVotes(); // 1
 ```
 
 ### N+1 issue
