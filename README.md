@@ -75,7 +75,8 @@ class Idea extends Model
 $user = User::find(1);
 $idea = Idea::find(2);
 
-$user->vote($idea);
+$user->vote($idea, 1); // upVote
+$user->vote($idea, -1); // downVote
 $user->upVote($idea);
 $user->downVote($idea);
 

@@ -91,10 +91,10 @@ class VoteTest extends TestCase
         /* @var \Tests\User $user4 */
         $user4 = User::create(['name' => 'someone']);
 
-        $user1->upVote($idea);
+        $user1->vote($idea, 1);
         $user2->upVote($idea);
         $user3->upVote($idea);
-        $user4->downVote($idea);
+        $user4->vote($idea, -1);
 
         $sqls = $this->getQueryLog(function () use ($idea, $user1, $user2, $user3) {
             Idea::withTotalVotes()->withTotalUpVotes()->withTotalDownVotes()->get()->toArray();

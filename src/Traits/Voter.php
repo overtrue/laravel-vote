@@ -9,6 +9,11 @@ use Illuminate\Database\Eloquent\Model;
  */
 trait Voter
 {
+    public function vote(Model $object, int $votes = 1)
+    {
+        return $votes > 0 ? $this->vote($object, $votes) : $this->downVote($object, $votes);
+    }
+
     public function upVote(Model $object, int $votes = 1)
     {
         /* @var Votable|Model $object */
