@@ -1,7 +1,7 @@
 Laravel Vote
 ---
 
-❤️ User vote feature for Laravel Application.
+👍🏻 👎🏻 User vote system for Laravel Application.
 
 ![CI](https://github.com/overtrue/laravel-vote/workflows/CI/badge.svg)
 
