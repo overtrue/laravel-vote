@@ -13,11 +13,11 @@ class VoteServiceProvider extends ServiceProvider
     {
         $this->publishes([
             \dirname(__DIR__) . '/config/vote.php' => config_path('vote.php'),
-        ], 'config');
+        ], 'laravel-vote-config');
 
         $this->publishes([
             \dirname(__DIR__) . '/migrations/' => database_path('migrations'),
-        ], 'migrations');
+        ], 'laravel-vote-migrations');
     }
 
     /**
