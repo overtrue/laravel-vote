@@ -3,7 +3,7 @@ Laravel Vote
 
 👍🏻 👎🏻 User vote system for Laravel Application.
 
-![CI](https://github.com/overtrue/laravel-vote/workflows/CI/badge.svg)
+[![CI](https://github.com/overtrue/laravel-vote/workflows/CI/badge.svg)](https://github.com/overtrue/laravel-vote/actions/workflows/ci.yml)
 
 
 ## Installing
