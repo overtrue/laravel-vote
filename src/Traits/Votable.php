@@ -8,7 +8,11 @@ use Illuminate\Database\Eloquent\Model;
 /**
  * @property \Illuminate\Database\Eloquent\Collection $voters
  * @property \Illuminate\Database\Eloquent\Collection $votes
- * @method relationLoaded(string $name)
+ * @method bool   relationLoaded(string $name)
+ * @method static withVotesAttributes()
+ * @method static withTotalVotes()
+ * @method static withTotalUpVotes()
+ * @method static withTotalDownVotes()
  */
 trait Votable
 {
@@ -31,9 +35,61 @@ trait Votable
         return $this->morphMany(config('vote.vote_model'), 'votable');
     }
 
+    public function upVotes(): \Illuminate\Database\Eloquent\Relations\MorphMany
+    {
+        return $this->votes()->where('votes', '>', 0);
+    }
+
+    public function downVotes(): \Illuminate\Database\Eloquent\Relations\MorphMany
+    {
+        return $this->votes()->where('votes', '<', 0);
+    }
+
+    public function voters()
+    {
+        return $this->belongsToMany(
+            config('auth.providers.users.model'),
+            config('vote.votes_table'),
+            'votable_id',
+            config('vote.user_foreign_key')
+        )->where('votable_type', $this->getMorphClass());
+    }
+
+    public function upVoters(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    {
+        return $this->voters()->where('votes', '>', 0);
+    }
+
+    public function downVoters(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    {
+        return $this->voters()->where('votes', '<', 0);
+    }
+
+    public function appendsVotesAttributes($attributes = ['total_votes', 'total_up_votes', 'total_down_votes'])
+    {
+        $this->append($attributes);
+
+        return $this;
+    }
+
+    public function getTotalVotesAttribute()
+    {
+        return abs($this->attributes['total_votes'] ?? $this->totalVotes());
+    }
+
+    public function getTotalUpVotesAttribute()
+    {
+        return abs($this->attributes['total_up_votes'] ?? $this->totalUpVotes());
+    }
+
+    public function getTotalDownVotesAttribute()
+    {
+        return abs($this->attributes['total_down_votes'] ?? $this->totalDownVotes());
+    }
+
     public function totalVotes()
     {
-        return $this->votes()->sum('votes');
+        return abs($this->votes()->sum('votes'));
     }
 
     public function totalUpVotes()
@@ -46,64 +102,25 @@ trait Votable
         return $this->votes()->where('votes', '<', 0)->sum('votes');
     }
 
-    public function scopeWithTotalVotes(Builder $builder)
+    public function scopeWithTotalVotes(Builder $builder): Builder
     {
-        return $builder->addSelect(
-            \DB::raw(sprintf(
-                'cast(ifnull((select sum(`%s`.`votes`)
-                                        from `votes` where %s = `%s`.`votable_id`
-                                        and `%s`.`votable_type` = "%s"), 0) as SIGNED)
-                            as `total_votes`',
-                config('vote.votes_table'),
-                $this->getTable() . '.' . $this->getKeyName(),
-                config('vote.votes_table'),
-                config('vote.votes_table'),
-                $this->getTable()
-            ))
-        );
+        return $builder->withSum('votes as total_votes', 'votes');
     }
 
-    public function scopeWithTotalUpVotes(Builder $builder)
+    public function scopeWithTotalUpVotes(Builder $builder): Builder
     {
-        return $builder->addSelect(
-            \DB::raw(sprintf(
-                'cast(ifnull((select sum(`%s`.`votes`)
-                                        from `votes` where `votes` > 0 and %s = `%s`.`votable_id`
-                                        and `%s`.`votable_type` = "%s"), 0) as SIGNED)
-                            as `total_votes`',
-                config('vote.votes_table'),
-                $this->getTable() . '.' . $this->getKeyName(),
-                config('vote.votes_table'),
-                config('vote.votes_table'),
-                $this->getTable()
-            ))
-        );
+        return $builder->withSum(['votes as total_up_votes' => fn ($q) => $q->where('votes', '>', 0)], 'votes');
     }
 
-    public function scopeWithTotalDownVotes(Builder $builder)
+    public function scopeWithTotalDownVotes(Builder $builder): Builder
     {
-        return $builder->addSelect(
-            \DB::raw(sprintf(
-                'cast(ifnull((select sum(`%s`.`votes`)
-                                        from `votes` where `votes` < 0 and %s = `%s`.`votable_id`
-                                        and `%s`.`votable_type` = "%s"), 0) as SIGNED)
-                            as `total_votes`',
-                config('vote.votes_table'),
-                $this->getTable() . '.' . $this->getKeyName(),
-                config('vote.votes_table'),
-                config('vote.votes_table'),
-                $this->getTable()
-            ))
-        );
+        return $builder->withSum(['votes as total_down_votes' => fn ($q) => $q->where('votes', '<', 0)], 'votes');
     }
 
-    public function voters()
+    public function scopeWithVotesAttributes(Builder $builder)
     {
-        return $this->belongsToMany(
-            config('auth.providers.users.model'),
-            config('vote.votes_table'),
-            'votable_id',
-            config('vote.user_foreign_key')
-        )->where('votable_type', $this->getMorphClass());
+        $this->scopeWithTotalVotes($builder);
+        $this->scopeWithTotalUpVotes($builder);
+        $this->scopeWithTotalDownVotes($builder);
     }
 }

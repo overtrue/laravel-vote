@@ -96,11 +96,55 @@ class VoteTest extends TestCase
         $user3->upVote($idea);
         $user4->vote($idea, -1);
 
-        $sqls = $this->getQueryLog(function () use ($idea, $user1, $user2, $user3) {
+        $ideas = Idea::withVotesAttributes()->get()->toArray();
+
+        // 2 = 3 - 1
+        $this->assertSame(2, $ideas[0]['total_votes']);
+        $this->assertSame(3, $ideas[0]['total_up_votes']);
+        $this->assertSame(1, $ideas[0]['total_down_votes']);
+
+        $sqls = $this->getQueryLog(function () {
             Idea::withTotalVotes()->withTotalUpVotes()->withTotalDownVotes()->get()->toArray();
         });
 
         $this->assertCount(1, $sqls);
+    }
+
+    public function test_voter_can_attach_vote_status_to_votable_collection()
+    {
+        /* @var \Tests\Idea $idea1 */
+        $idea1 = Idea::create(['title' => 'Add socialite login support.']);
+        /* @var \Tests\Idea $idea2 */
+        $idea2 = Idea::create(['title' => 'Add php8 support.']);
+        /* @var \Tests\Idea $idea3 */
+        $idea3 = Idea::create(['title' => 'Add qrcode support.']);
+
+        /* @var \Tests\User $user */
+        $user = User::create(['name' => 'overtrue']);
+
+        $user->upVote($idea1);
+        $user->downVote($idea2);
+
+        $ideas = Idea::oldest('id')->get();
+
+        $user->attachVoteStatus($ideas);
+
+        $ideas = $ideas->toArray();
+
+        // user has up voted idea1
+        $this->assertTrue($ideas[0]['has_voted']);
+        $this->assertTrue($ideas[0]['has_up_voted']);
+        $this->assertFalse($ideas[0]['has_down_voted']);
+
+        // user has down voted idea2
+        $this->assertTrue($ideas[1]['has_voted']);
+        $this->assertTrue($ideas[1]['has_down_voted']);
+        $this->assertFalse($ideas[1]['has_up_voted']);
+
+        // user hasn't voted idea3
+        $this->assertFalse($ideas[2]['has_voted']);
+        $this->assertFalse($ideas[2]['has_down_voted']);
+        $this->assertFalse($ideas[2]['has_up_voted']);
     }
 
     public function test_votable_can_get_voters()

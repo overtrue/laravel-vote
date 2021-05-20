@@ -140,16 +140,32 @@ List with `*_count` attribute:
 ```php
 // for Voter models:
 $users = User::withCount('votes')->get();
+// or
+$users = User::withCount('upVotes')->get();
+// or
+$users = User::withCount('downVotes')->get();
+// or
+$users = User::withCount(['votes', 'upVotes', 'downVotes'])->get();
 
 foreach($users as $user) {
     echo $user->votes_count;
+    echo $user->up_votes_count;
+    echo $user->down_votes_count;
 }
 
 // for Votable models: 
 $ideas = Idea::withCount('voters')->get();
+// or
+$ideas = Idea::withCount('upVoters')->get();
+$ideas = Idea::withCount('downVoters')->get();
+
+// or
+$ideas = Idea::withCount(['voters', 'upVoters', 'downVoters'])->get();
 
 foreach($ideas as $idea) {
     echo $idea->voters_count;
+    echo $idea->up_voters_count;
+    echo $idea->down_voters_count;
 }
 ```
 
@@ -169,6 +185,93 @@ $idea->totalUpVotes(); // 3
 
 // abs(sum(votes)) where votes < 0
 $idea->totalDownVotes(); // 1
+
+// appends aggregations attributes
+$idea->appendsVotesAttributes();
+$idea->toArray();
+// result
+[
+    "id" => 1
+    "title" => "Add socialite login support."
+    "created_at" => "2021-05-20T03:26:16.000000Z"
+    "updated_at" => "2021-05-20T03:26:16.000000Z"
+    
+    // these aggregations attributes will be appends.
+    "total_votes" => 2
+    "total_up_votes" => 3
+    "total_down_votes" => 1
+  ],
+```
+
+### Attach voter vote status to votable collection
+
+You can use `Voter::attachVoteStatus(Collection $votables)` to attach the voter vote status, it will set `has_voted`,`has_up_voted` and `has_down_voted` attributes to each model of `$votables`:
+
+#### For model
+```php
+$idea = Idea::find(1);
+
+$user->attachVoteStatus($idea);
+
+// result
+[
+    "id" => 1
+    "title" => "Add socialite login support."
+    "created_at" => "2021-05-20T03:26:16.000000Z"
+    "updated_at" => "2021-05-20T03:26:16.000000Z"
+    "has_voted" => true
+    "has_up_voted" => true
+    "has_down_voted" => false
+ ],
+```
+
+#### For `Collection | Paginator | LengthAwarePaginator | array`:
+
+```php
+$ideas = Idea::oldest('id')->get();
+
+$user->attachVoteStatus($ideas);
+
+$ideas = $ideas->toArray();
+
+// result
+[
+  [
+    "id" => 1
+    "title" => "Add socialite login support."
+    "created_at" => "2021-05-20T03:26:16.000000Z"
+    "updated_at" => "2021-05-20T03:26:16.000000Z"
+    "has_voted" => true
+    "has_up_voted" => true
+    "has_down_voted" => false
+  ],
+  [
+    "id" => 2
+    "title" => "Add php8 support."
+    "created_at" => "2021-05-20T03:26:16.000000Z"
+    "updated_at" => "2021-05-20T03:26:16.000000Z"
+    "has_voted" => true
+    "has_up_voted" => false
+    "has_down_voted" => true
+  ],
+  [
+    "id" => 3
+    "title" => "Add qrcode support."
+    "created_at" => "2021-05-20T03:26:16.000000Z"
+    "updated_at" => "2021-05-20T03:26:16.000000Z"
+    "has_voted" => false
+    "has_up_voted" => false
+    "has_down_voted" => false
+  ],
+]
+```
+
+#### For pagination
+
+```php
+$ideas = Idea::paginate(20);
+
+$user->attachVoteStatus($ideas->getCollection());
 ```
 
 ### N+1 issue
@@ -177,44 +280,50 @@ To avoid the N+1 issue, you can use eager loading to reduce this operation to ju
 
 ```php
 // Voter
-$users = App\Models\User::with('votes')->get();
+use Tests\Idea;$users = User::with('votes')->get();
 
 foreach($users as $user) {
     $user->hasVoted($idea);
 }
 
 // Votable
-$ideas = App\Models\Idea::with('voters')->get();
+$ideas = Idea::with('voters')->get();
 
 foreach($ideas as $idea) {
     $idea->hasBeenVotedBy($user);
 }
 
 // Votable votes
-$ideas = App\Models\Idea::withTotalVotes() // total_votes
+$ideas = Idea::withTotalVotes() // total_votes
         ->withTotalUpVotes() // total_up_votes
         ->withTotalDownVotes() // total_down_votes
         ->get();
-//[
-//  0 => array:7 [
-//    "id" => 1
-//    "title" => "Add socialite login support."
-//    "created_at" => "2021-05-19T07:01:10.000000Z"
-//    "updated_at" => "2021-05-19T07:01:10.000000Z"
-//    "total_votes" => "2"
-//    "total_up_votes" => "3"
-//    "total_down_votes" => "1"
-//  ]
-//  1 => array:7 [
-//    "id" => 2
-//    "title" => "Add PHP8 support."
-//    "created_at" => "2021-05-20T07:01:10.000000Z"
-//    "updated_at" => "2021-05-20T07:01:10.000000Z"
-//    "total_votes" => "1"
-//    "total_up_votes" => "2"
-//    "total_down_votes" => "1"
-//  ]
-//]
+
+// same as
+// withVotesAttributes() = withTotalVotes() + withTotalUpVotes() + withTotalDownVotes() 
+$ideas = Idea::withVotesAttributes()->get();
+
+// result
+[
+  [
+    "id" => 1
+    "title" => "Add socialite login support."
+    "created_at" => "2021-05-19T07:01:10.000000Z"
+    "updated_at" => "2021-05-19T07:01:10.000000Z"
+    "total_votes" => 2
+    "total_up_votes" => 3
+    "total_down_votes" => 1
+  ],
+  [
+    "id" => 2
+    "title" => "Add PHP8 support."
+    "created_at" => "2021-05-20T07:01:10.000000Z"
+    "updated_at" => "2021-05-20T07:01:10.000000Z"
+    "total_votes" => 1
+    "total_up_votes" => 2
+    "total_down_votes" => 1
+  ]
+]
 ```
 
 ### Events

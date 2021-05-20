@@ -2,9 +2,12 @@
 
 namespace Overtrue\LaravelVote\Traits;
 
-use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Contracts\Pagination\Paginator;
+use Illuminate\Support\Collection;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Overtrue\LaravelVote\Vote;
+use PhpParser\Node\Expr\AssignOp\Mod;
 
 /**
  * @property \Illuminate\Database\Eloquent\Collection $votes
@@ -46,6 +49,42 @@ trait Voter
         return $vote;
     }
 
+    public function attachVoteStatus(Model | Collection | Paginator | LengthAwarePaginator | array $votables): Collection | Model
+    {
+        $returnFirst = false;
+
+        switch (true) {
+            case $votables instanceof Model:
+                $returnFirst = true;
+                $votables = \collect([$votables]);
+                break;
+            case $votables instanceof Paginator:
+                $votables = \collect($votables->items());
+                break;
+            case $votables instanceof LengthAwarePaginator:
+                $votables = $votables->getCollection();
+                break;
+            case \is_array($votables):
+                $votables = \collect($votables);
+                break;
+        }
+
+        $voterVoted = $this->votes()->get()->keyBy(function ($item) {
+            return \sprintf('%s-%s', $item->votable_type, $item->votable_id);
+        });
+
+        $votables->map(function (Model $votable) use ($voterVoted) {
+            if (\in_array(Votable::class, \class_uses($votable))) {
+                $key = \sprintf('%s-%s', $votable->getMorphClass(), $votable->getKey());
+                $votable->setAttribute('has_voted', $voterVoted->has($key));
+                $votable->setAttribute('has_up_voted', $voterVoted->has($key) && $voterVoted->get($key)->is_up_vote);
+                $votable->setAttribute('has_down_voted', $voterVoted->has($key) && $voterVoted->get($key)->is_down_vote);
+            }
+        });
+
+        return $returnFirst ? $votables->first() : $votables;
+    }
+
     public function cancelVote(Model $object): bool
     {
         /* @var Votable|Model $object */
@@ -65,9 +104,9 @@ trait Voter
     public function hasVoted(Model $object): bool
     {
         return ($this->relationLoaded('votes') ? $this->votes : $this->votes())
-            ->where('votable_id', $object->getKey())
-            ->where('votable_type', $object->getMorphClass())
-            ->count() > 0;
+                ->where('votable_id', $object->getKey())
+                ->where('votable_type', $object->getMorphClass())
+                ->count() > 0;
     }
 
     public function votes(): \Illuminate\Database\Eloquent\Relations\HasMany
@@ -75,18 +114,14 @@ trait Voter
         return $this->hasMany(config('vote.vote_model'), config('vote.user_foreign_key'), $this->getKeyName());
     }
 
-    public function attachVoteStatusToVotables(Collection $votables)
+    public function upVotes(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
-        $voterVoted = $this->votes()->get()->keyBy(function ($item) {
-            return \sprintf('%s-%s', $item->votable_type, $item->votable_id);
-        });
+        return $this->votes()->where('votes', '>', 0);
+    }
 
-        $votables->map(function (Model $votable) use ($voterVoted) {
-            $key = \sprintf('%s-%s', $votable->getMorphClass(), $votable->getKey());
-            $votable->setAttribute('has_voted', $voterVoted->has($key));
-            $votable->setAttribute('has_up_voted', $voterVoted->has($key) && $voterVoted->get($key)->is_up_voted);
-            $votable->setAttribute('has_down_voted', $voterVoted->has($key) && $voterVoted->get($key)->is_down_voted);
-        });
+    public function downVotes(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->votes()->where('votes', '<', 0);
     }
 
     public function getVotedItems(string $model)
