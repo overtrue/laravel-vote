@@ -75,14 +75,14 @@ class Idea extends Model
 $user = User::find(1);
 $idea = Idea::find(2);
 
-$user->vote($idea, 1); // upVote
-$user->vote($idea, -1); // downVote
-$user->upVote($idea);
-$user->downVote($idea);
+$user->vote($idea, 1); // upvote
+$user->vote($idea, -1); // downvote
+$user->upvote($idea);
+$user->downvote($idea);
 
 // with custom number of votes
-$user->upVote($idea, 3);
-$user->downVote($idea, 3);
+$user->upvote($idea, 3);
+$user->downvote($idea, 3);
 
 // cancel vote
 $user->cancelVote($idea);
@@ -141,50 +141,50 @@ List with `*_count` attribute:
 // for Voter models:
 $users = User::withCount('votes')->get();
 // or
-$users = User::withCount('upVotes')->get();
+$users = User::withCount('upvotes')->get();
 // or
-$users = User::withCount('downVotes')->get();
+$users = User::withCount('downvotes')->get();
 // or
-$users = User::withCount(['votes', 'upVotes', 'downVotes'])->get();
+$users = User::withCount(['votes', 'upvotes', 'downvotes'])->get();
 
 foreach($users as $user) {
     echo $user->votes_count;
-    echo $user->up_votes_count;
-    echo $user->down_votes_count;
+    echo $user->upvotes_count;
+    echo $user->downvotes_count;
 }
 
 // for Votable models: 
 $ideas = Idea::withCount('voters')->get();
 // or
-$ideas = Idea::withCount('upVoters')->get();
-$ideas = Idea::withCount('downVoters')->get();
+$ideas = Idea::withCount('upvoters')->get();
+$ideas = Idea::withCount('downvoters')->get();
 
 // or
-$ideas = Idea::withCount(['voters', 'upVoters', 'downVoters'])->get();
+$ideas = Idea::withCount(['voters', 'upvoters', 'downvoters'])->get();
 
 foreach($ideas as $idea) {
     echo $idea->voters_count;
-    echo $idea->up_voters_count;
-    echo $idea->down_voters_count;
+    echo $idea->upvoters_count;
+    echo $idea->downvoters_count;
 }
 ```
 
 ### Votable sum votes
 
 ```php
-$user1->upVote($idea); // 1 (up)
-$user2->upVote($idea); // 2 (up)
-$user3->upVote($idea); // 3 (up)
-$user4->downVote($idea); // -1 (down)
+$user1->upvote($idea); // 1 (up)
+$user2->upvote($idea); // 2 (up)
+$user3->upvote($idea); // 3 (up)
+$user4->downvote($idea); // -1 (down)
 
 // sum(votes)
 $idea->totalVotes(); // 2(3 - 1)
 
 // sum(votes) where votes > 0
-$idea->totalUpVotes(); // 3
+$idea->totalUpvotes(); // 3
 
 // abs(sum(votes)) where votes < 0
-$idea->totalDownVotes(); // 1
+$idea->totalDownvotes(); // 1
 
 // appends aggregations attributes
 $idea->appendsVotesAttributes();
@@ -198,14 +198,14 @@ $idea->toArray();
     
     // these aggregations attributes will be appends.
     "total_votes" => 2
-    "total_up_votes" => 3
-    "total_down_votes" => 1
+    "total_upvotes" => 3
+    "total_downvotes" => 1
   ],
 ```
 
 ### Attach voter vote status to votable collection
 
-You can use `Voter::attachVoteStatus(Collection $votables)` to attach the voter vote status, it will set `has_voted`,`has_up_voted` and `has_down_voted` attributes to each model of `$votables`:
+You can use `Voter::attachVoteStatus(Collection $votables)` to attach the voter vote status, it will set `has_voted`,`has_upvoted` and `has_downvoted` attributes to each model of `$votables`:
 
 #### For model
 ```php
@@ -220,8 +220,8 @@ $user->attachVoteStatus($idea);
     "created_at" => "2021-05-20T03:26:16.000000Z"
     "updated_at" => "2021-05-20T03:26:16.000000Z"
     "has_voted" => true
-    "has_up_voted" => true
-    "has_down_voted" => false
+    "has_upvoted" => true
+    "has_downvoted" => false
  ],
 ```
 
@@ -242,8 +242,8 @@ $ideas = $ideas->toArray();
     "created_at" => "2021-05-20T03:26:16.000000Z"
     "updated_at" => "2021-05-20T03:26:16.000000Z"
     "has_voted" => true
-    "has_up_voted" => true
-    "has_down_voted" => false
+    "has_upvoted" => true
+    "has_downvoted" => false
   ],
   [
     "id" => 2
@@ -251,8 +251,8 @@ $ideas = $ideas->toArray();
     "created_at" => "2021-05-20T03:26:16.000000Z"
     "updated_at" => "2021-05-20T03:26:16.000000Z"
     "has_voted" => true
-    "has_up_voted" => false
-    "has_down_voted" => true
+    "has_upvoted" => false
+    "has_downvoted" => true
   ],
   [
     "id" => 3
@@ -260,8 +260,8 @@ $ideas = $ideas->toArray();
     "created_at" => "2021-05-20T03:26:16.000000Z"
     "updated_at" => "2021-05-20T03:26:16.000000Z"
     "has_voted" => false
-    "has_up_voted" => false
-    "has_down_voted" => false
+    "has_upvoted" => false
+    "has_downvoted" => false
   ],
 ]
 ```
@@ -295,12 +295,12 @@ foreach($ideas as $idea) {
 
 // Votable votes
 $ideas = Idea::withTotalVotes() // total_votes
-        ->withTotalUpVotes() // total_up_votes
-        ->withTotalDownVotes() // total_down_votes
+        ->withTotalUpvotes() // total_upvotes
+        ->withTotalDownvotes() // total_downvotes
         ->get();
 
 // same as
-// withVotesAttributes() = withTotalVotes() + withTotalUpVotes() + withTotalDownVotes() 
+// withVotesAttributes() = withTotalVotes() + withTotalUpvotes() + withTotalDownvotes() 
 $ideas = Idea::withVotesAttributes()->get();
 
 // result
@@ -311,8 +311,8 @@ $ideas = Idea::withVotesAttributes()->get();
     "created_at" => "2021-05-19T07:01:10.000000Z"
     "updated_at" => "2021-05-19T07:01:10.000000Z"
     "total_votes" => 2
-    "total_up_votes" => 3
-    "total_down_votes" => 1
+    "total_upvotes" => 3
+    "total_downvotes" => 1
   ],
   [
     "id" => 2
@@ -320,8 +320,8 @@ $ideas = Idea::withVotesAttributes()->get();
     "created_at" => "2021-05-20T07:01:10.000000Z"
     "updated_at" => "2021-05-20T07:01:10.000000Z"
     "total_votes" => 1
-    "total_up_votes" => 2
-    "total_down_votes" => 1
+    "total_upvotes" => 2
+    "total_downvotes" => 1
   ]
 ]
 ```

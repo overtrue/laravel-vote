@@ -11,8 +11,8 @@ use Illuminate\Database\Eloquent\Model;
  * @method bool   relationLoaded(string $name)
  * @method static withVotesAttributes()
  * @method static withTotalVotes()
- * @method static withTotalUpVotes()
- * @method static withTotalDownVotes()
+ * @method static withTotalUpvotes()
+ * @method static withTotalDownvotes()
  */
 trait Votable
 {
@@ -35,12 +35,12 @@ trait Votable
         return $this->morphMany(config('vote.vote_model'), 'votable');
     }
 
-    public function upVotes(): \Illuminate\Database\Eloquent\Relations\MorphMany
+    public function upvotes(): \Illuminate\Database\Eloquent\Relations\MorphMany
     {
         return $this->votes()->where('votes', '>', 0);
     }
 
-    public function downVotes(): \Illuminate\Database\Eloquent\Relations\MorphMany
+    public function downvotes(): \Illuminate\Database\Eloquent\Relations\MorphMany
     {
         return $this->votes()->where('votes', '<', 0);
     }
@@ -55,17 +55,17 @@ trait Votable
         )->where('votable_type', $this->getMorphClass());
     }
 
-    public function upVoters(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    public function upvoters(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
     {
         return $this->voters()->where('votes', '>', 0);
     }
 
-    public function downVoters(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    public function downvoters(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
     {
         return $this->voters()->where('votes', '<', 0);
     }
 
-    public function appendsVotesAttributes($attributes = ['total_votes', 'total_up_votes', 'total_down_votes'])
+    public function appendsVotesAttributes($attributes = ['total_votes', 'total_upvotes', 'total_downvotes'])
     {
         $this->append($attributes);
 
@@ -77,14 +77,14 @@ trait Votable
         return abs($this->attributes['total_votes'] ?? $this->totalVotes());
     }
 
-    public function getTotalUpVotesAttribute()
+    public function getTotalUpvotesAttribute()
     {
-        return abs($this->attributes['total_up_votes'] ?? $this->totalUpVotes());
+        return abs($this->attributes['total_upvotes'] ?? $this->totalUpvotes());
     }
 
-    public function getTotalDownVotesAttribute()
+    public function getTotalDownvotesAttribute()
     {
-        return abs($this->attributes['total_down_votes'] ?? $this->totalDownVotes());
+        return abs($this->attributes['total_downvotes'] ?? $this->totalDownvotes());
     }
 
     public function totalVotes()
@@ -92,12 +92,12 @@ trait Votable
         return abs($this->votes()->sum('votes'));
     }
 
-    public function totalUpVotes()
+    public function totalUpvotes()
     {
         return $this->votes()->where('votes', '>', 0)->sum('votes');
     }
 
-    public function totalDownVotes()
+    public function totalDownvotes()
     {
         return $this->votes()->where('votes', '<', 0)->sum('votes');
     }
@@ -107,20 +107,20 @@ trait Votable
         return $builder->withSum('votes as total_votes', 'votes');
     }
 
-    public function scopeWithTotalUpVotes(Builder $builder): Builder
+    public function scopeWithTotalUpvotes(Builder $builder): Builder
     {
-        return $builder->withSum(['votes as total_up_votes' => fn ($q) => $q->where('votes', '>', 0)], 'votes');
+        return $builder->withSum(['votes as total_upvotes' => fn ($q) => $q->where('votes', '>', 0)], 'votes');
     }
 
-    public function scopeWithTotalDownVotes(Builder $builder): Builder
+    public function scopeWithTotalDownvotes(Builder $builder): Builder
     {
-        return $builder->withSum(['votes as total_down_votes' => fn ($q) => $q->where('votes', '<', 0)], 'votes');
+        return $builder->withSum(['votes as total_downvotes' => fn ($q) => $q->where('votes', '<', 0)], 'votes');
     }
 
     public function scopeWithVotesAttributes(Builder $builder)
     {
         $this->scopeWithTotalVotes($builder);
-        $this->scopeWithTotalUpVotes($builder);
-        $this->scopeWithTotalDownVotes($builder);
+        $this->scopeWithTotalUpvotes($builder);
+        $this->scopeWithTotalDownvotes($builder);
     }
 }

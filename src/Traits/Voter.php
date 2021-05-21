@@ -7,7 +7,6 @@ use Illuminate\Support\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Overtrue\LaravelVote\Vote;
-use PhpParser\Node\Expr\AssignOp\Mod;
 
 /**
  * @property \Illuminate\Database\Eloquent\Collection $votes
@@ -16,10 +15,10 @@ trait Voter
 {
     public function vote(Model $object, int $votes = 1): Vote
     {
-        return $votes > 0 ? $this->upVote($object, $votes) : $this->downVote($object, $votes);
+        return $votes > 0 ? $this->upvote($object, $votes) : $this->downvote($object, $votes);
     }
 
-    public function upVote(Model $object, int $votes = 1)
+    public function upvote(Model $object, int $votes = 1)
     {
         /* @var Votable|Model $object */
         if ($this->hasVoted($object)) {
@@ -34,7 +33,7 @@ trait Voter
         return $vote;
     }
 
-    public function downVote(Model $object, int $votes = 1)
+    public function downvote(Model $object, int $votes = 1)
     {
         /* @var Votable|Model $object */
         if ($this->hasVoted($object)) {
@@ -58,11 +57,11 @@ trait Voter
                 $returnFirst = true;
                 $votables = \collect([$votables]);
                 break;
-            case $votables instanceof Paginator:
-                $votables = \collect($votables->items());
-                break;
             case $votables instanceof LengthAwarePaginator:
                 $votables = $votables->getCollection();
+                break;
+            case $votables instanceof Paginator:
+                $votables = \collect($votables->items());
                 break;
             case \is_array($votables):
                 $votables = \collect($votables);
@@ -77,8 +76,8 @@ trait Voter
             if (\in_array(Votable::class, \class_uses($votable))) {
                 $key = \sprintf('%s-%s', $votable->getMorphClass(), $votable->getKey());
                 $votable->setAttribute('has_voted', $voterVoted->has($key));
-                $votable->setAttribute('has_up_voted', $voterVoted->has($key) && $voterVoted->get($key)->is_up_vote);
-                $votable->setAttribute('has_down_voted', $voterVoted->has($key) && $voterVoted->get($key)->is_down_vote);
+                $votable->setAttribute('has_upvoted', $voterVoted->has($key) && $voterVoted->get($key)->is_up_vote);
+                $votable->setAttribute('has_downvoted', $voterVoted->has($key) && $voterVoted->get($key)->is_down_vote);
             }
         });
 
@@ -114,12 +113,12 @@ trait Voter
         return $this->hasMany(config('vote.vote_model'), config('vote.user_foreign_key'), $this->getKeyName());
     }
 
-    public function upVotes(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function upvotes(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
         return $this->votes()->where('votes', '>', 0);
     }
 
-    public function downVotes(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function downvotes(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
         return $this->votes()->where('votes', '<', 0);
     }

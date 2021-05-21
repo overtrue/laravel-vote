@@ -24,7 +24,7 @@ class VoteTest extends TestCase
         /* @var \Tests\Idea $idea */
         $idea = Idea::create(['title' => 'Add custom votes support']);
 
-        $user->upVote($idea);
+        $user->upvote($idea);
 
         Event::assertDispatched(Voted::class, function ($event) use ($user, $idea) {
             return $event->vote->votable instanceof Idea
@@ -45,7 +45,7 @@ class VoteTest extends TestCase
         /* @var \Tests\Idea $idea */
         $idea = Idea::create(['title' => 'Add custom votes support']);
 
-        $user->downVote($idea);
+        $user->downvote($idea);
 
         Event::assertDispatched(Voted::class, function ($event) use ($user, $idea) {
             return $event->vote->votable instanceof Idea
@@ -66,7 +66,7 @@ class VoteTest extends TestCase
         /* @var \Tests\Idea $idea */
         $idea = Idea::create(['title' => 'Add custom votes support']);
 
-        $user->downVote($idea);
+        $user->downvote($idea);
 
         $this->assertTrue($user->hasVoted($idea));
         $this->assertTrue($idea->hasBeenVotedBy($user));
@@ -92,19 +92,19 @@ class VoteTest extends TestCase
         $user4 = User::create(['name' => 'someone']);
 
         $user1->vote($idea, 1);
-        $user2->upVote($idea);
-        $user3->upVote($idea);
+        $user2->upvote($idea);
+        $user3->upvote($idea);
         $user4->vote($idea, -1);
 
         $ideas = Idea::withVotesAttributes()->get()->toArray();
 
         // 2 = 3 - 1
         $this->assertSame(2, $ideas[0]['total_votes']);
-        $this->assertSame(3, $ideas[0]['total_up_votes']);
-        $this->assertSame(1, $ideas[0]['total_down_votes']);
+        $this->assertSame(3, $ideas[0]['total_upvotes']);
+        $this->assertSame(1, $ideas[0]['total_downvotes']);
 
         $sqls = $this->getQueryLog(function () {
-            Idea::withTotalVotes()->withTotalUpVotes()->withTotalDownVotes()->get()->toArray();
+            Idea::withTotalVotes()->withTotalUpvotes()->withTotalDownvotes()->get()->toArray();
         });
 
         $this->assertCount(1, $sqls);
@@ -122,8 +122,8 @@ class VoteTest extends TestCase
         /* @var \Tests\User $user */
         $user = User::create(['name' => 'overtrue']);
 
-        $user->upVote($idea1);
-        $user->downVote($idea2);
+        $user->upvote($idea1);
+        $user->downvote($idea2);
 
         $ideas = Idea::oldest('id')->get();
 
@@ -133,18 +133,18 @@ class VoteTest extends TestCase
 
         // user has up voted idea1
         $this->assertTrue($ideas[0]['has_voted']);
-        $this->assertTrue($ideas[0]['has_up_voted']);
-        $this->assertFalse($ideas[0]['has_down_voted']);
+        $this->assertTrue($ideas[0]['has_upvoted']);
+        $this->assertFalse($ideas[0]['has_downvoted']);
 
         // user has down voted idea2
         $this->assertTrue($ideas[1]['has_voted']);
-        $this->assertTrue($ideas[1]['has_down_voted']);
-        $this->assertFalse($ideas[1]['has_up_voted']);
+        $this->assertTrue($ideas[1]['has_downvoted']);
+        $this->assertFalse($ideas[1]['has_upvoted']);
 
         // user hasn't voted idea3
         $this->assertFalse($ideas[2]['has_voted']);
-        $this->assertFalse($ideas[2]['has_down_voted']);
-        $this->assertFalse($ideas[2]['has_up_voted']);
+        $this->assertFalse($ideas[2]['has_downvoted']);
+        $this->assertFalse($ideas[2]['has_upvoted']);
     }
 
     public function test_votable_can_get_voters()
@@ -162,10 +162,10 @@ class VoteTest extends TestCase
         /* @var \Tests\Idea $idea */
         $idea = Idea::create(['title' => 'Add socialite login support.']);
 
-        $user2->upVote($idea);
-        $user3->upVote($idea);
-        $user1->upVote($idea);
-        $user4->downVote($idea);
+        $user2->upvote($idea);
+        $user3->upvote($idea);
+        $user1->upvote($idea);
+        $user4->downvote($idea);
 
         $this->assertCount(4, $idea->voters);
 
@@ -182,10 +182,10 @@ class VoteTest extends TestCase
         $feature1 = Feature::create(['title' => 'Add laravel eloquent support.']);
         $feature2 = Feature::create(['title' => 'Add PHP8.']);
 
-        $user->upVote($idea1);
-        $user->upVote($idea2);
-        $user->upVote($feature1);
-        $user->upVote($feature2);
+        $user->upvote($idea1);
+        $user->upvote($idea2);
+        $user->upvote($feature1);
+        $user->upvote($feature2);
 
         $this->assertSame(4, $user->votes()->count());
         $this->assertSame(2, $user->votes()->ofType(Idea::class)->count());
@@ -204,8 +204,8 @@ class VoteTest extends TestCase
 
         $idea = Idea::create(['title' => 'Add socialite login support.']);
 
-        $user1->upVote($idea);
-        $user2->downVote($idea);
+        $user1->upvote($idea);
+        $user2->downvote($idea);
 
         $this->assertCount(2, $idea->voters);
         $this->assertSame('overtrue', $idea->voters[0]['name']);
@@ -230,10 +230,10 @@ class VoteTest extends TestCase
         $feature1 = Feature::create(['title' => 'Add laravel eloquent support.']);
         $feature2 = Feature::create(['title' => 'Add PHP8.']);
 
-        $user->upVote($idea1);
-        $user->upVote($idea2);
-        $user->upVote($feature1);
-        $user->upVote($feature2);
+        $user->upvote($idea1);
+        $user->upvote($idea2);
+        $user->upvote($feature1);
+        $user->upvote($feature2);
 
         // start recording
         $sqls = $this->getQueryLog(function () use ($user) {
