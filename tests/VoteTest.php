@@ -4,7 +4,6 @@ namespace Tests;
 
 use Illuminate\Support\Facades\Event;
 use Overtrue\LaravelVote\Events\Voted;
-use Overtrue\LaravelVote\Events\VoteCancelled;
 
 class VoteTest extends TestCase
 {
