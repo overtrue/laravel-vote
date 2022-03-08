@@ -11,29 +11,20 @@ Laravel Vote
 ## Installing
 
 ```shell
-$ composer require overtrue/laravel-vote -vvv
+composer require overtrue/laravel-vote -vvv
 ```
 
-### Configuration
+### Configuration & Migrations
 
-This step is optional
 
-```bash
-$ php artisan vendor:publish --provider="Overtrue\\LaravelVote\\VoteServiceProvider" --tag=config
-```
-
-### Migrations
-
-This step is required, you can publish the migration files:
-
-```bash
-$ php artisan vendor:publish --provider="Overtrue\\LaravelVote\\VoteServiceProvider" --tag=migrations
+```shell
+php artisan vendor:publish 
 ```
 
 then create tables: 
 
 ```bash
-$ php artisan migrate
+php artisan migrate
 ```
 
 ## Usage
