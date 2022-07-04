@@ -52,7 +52,7 @@ trait Votable
             config('vote.votes_table'),
             'votable_id',
             config('vote.user_foreign_key')
-        )->where('votable_type', $this->getMorphClass());
+        )->where('votable_type', $this->getMorphClass())->withPivot(['votes']);
     }
 
     public function upvoters(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
