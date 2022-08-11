@@ -74,7 +74,7 @@ trait Votable
 
     public function getTotalVotesAttribute()
     {
-        return abs($this->attributes['total_votes'] ?? $this->totalVotes());
+        return $this->attributes['total_votes'] ?? $this->totalVotes();
     }
 
     public function getTotalUpvotesAttribute()
@@ -89,7 +89,7 @@ trait Votable
 
     public function totalVotes()
     {
-        return abs($this->votes()->sum('votes'));
+        return $this->votes()->sum('votes');
     }
 
     public function totalUpvotes()

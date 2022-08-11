@@ -107,6 +107,19 @@ class VoteTest extends TestCase
         });
 
         $this->assertCount(1, $sqls);
+
+
+        // -2 = -1 + -1
+        $user1->vote($idea, -1);  // downvote
+        $user2->upvote($idea); // upvote
+        $user3->downvote($idea); // downvote
+        $user4->vote($idea, -1); // downvote
+
+        $ideas = Idea::withVotesAttributes()->get()->toArray();
+
+        $this->assertSame(-2, $ideas[0]['total_votes']);
+        $this->assertSame(1, $ideas[0]['total_upvotes']);
+        $this->assertSame(3, $ideas[0]['total_downvotes']);
     }
 
     public function test_voter_can_attach_vote_status_to_votable_collection()
