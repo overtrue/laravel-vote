@@ -104,17 +104,23 @@ trait Votable
 
     public function scopeWithTotalVotes(Builder $builder): Builder
     {
-        return $builder->withSum('votes as total_votes', 'votes');
+        return $builder->withSum(['votes as total_votes' =>
+            fn ($q) => $q->select(\DB::raw('COALESCE(SUM(votes), 0)'))
+        ], 'votes');
     }
 
     public function scopeWithTotalUpvotes(Builder $builder): Builder
     {
-        return $builder->withSum(['votes as total_upvotes' => fn ($q) => $q->where('votes', '>', 0)], 'votes');
+        return $builder->withSum(['votes as total_upvotes' =>
+            fn ($q) => $q->where('votes', '>', 0)->select(\DB::raw('COALESCE(SUM(votes), 0)'))
+        ], 'votes');
     }
 
     public function scopeWithTotalDownvotes(Builder $builder): Builder
     {
-        return $builder->withSum(['votes as total_downvotes' => fn ($q) => $q->where('votes', '<', 0)], 'votes');
+        return $builder->withSum(['votes as total_downvotes' =>
+            fn ($q) => $q->where('votes', '<', 0)->select(\DB::raw('COALESCE(SUM(votes), 0)'))
+        ], 'votes');
     }
 
     public function scopeWithVotesAttributes(Builder $builder)
