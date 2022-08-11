@@ -25,7 +25,8 @@
         "mockery/mockery": "^1.4",
         "phpunit/phpunit": "^9.5",
         "orchestra/testbench": "^7.0",
-        "friendsofphp/php-cs-fixer": "^3.6"
+        "friendsofphp/php-cs-fixer": "^3.6",
+        "brainmaestro/composer-git-hooks": "dev-master"
     },
     "extra": {
         "laravel": {
