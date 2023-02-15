@@ -108,7 +108,6 @@ class VoteTest extends TestCase
 
         $this->assertCount(1, $sqls);
 
-
         // -2 = -1 + -1
         $user1->vote($idea, -1);  // downvote
         $user2->upvote($idea); // upvote

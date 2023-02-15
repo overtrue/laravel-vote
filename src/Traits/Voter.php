@@ -3,9 +3,9 @@
 namespace Overtrue\LaravelVote\Traits;
 
 use Illuminate\Contracts\Pagination\Paginator;
-use Illuminate\Support\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Collection;
 use Overtrue\LaravelVote\Vote;
 
 /**
@@ -48,7 +48,7 @@ trait Voter
         return $vote;
     }
 
-    public function attachVoteStatus(Model | Collection | Paginator | LengthAwarePaginator | array $votables): Collection | Model
+    public function attachVoteStatus(Model|Collection|Paginator|LengthAwarePaginator|array $votables): Collection|Model
     {
         $returnFirst = false;
 

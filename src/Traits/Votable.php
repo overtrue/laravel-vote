@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 /**
  * @property \Illuminate\Database\Eloquent\Collection $voters
  * @property \Illuminate\Database\Eloquent\Collection $votes
+ *
  * @method bool   relationLoaded(string $name)
  * @method static withVotesAttributes()
  * @method static withTotalVotes()

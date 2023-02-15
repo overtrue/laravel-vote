@@ -5,8 +5,8 @@ namespace Overtrue\LaravelVote;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
-use Overtrue\LaravelVote\Events\Voted;
 use Overtrue\LaravelVote\Events\VoteCancelled;
+use Overtrue\LaravelVote\Events\Voted;
 
 /**
  * @property string|int                          $user_id
@@ -56,7 +56,7 @@ class Vote extends Model
             $vote->{$userForeignKey} = $vote->{$userForeignKey} ?: auth()->id();
 
             if (\config('vote.uuids')) {
-                $vote->{$vote->getKeyName()} = $vote->{$vote->getKeyName()} ?: (string)Str::orderedUuid();
+                $vote->{$vote->getKeyName()} = $vote->{$vote->getKeyName()} ?: (string) Str::orderedUuid();
             }
         });
     }

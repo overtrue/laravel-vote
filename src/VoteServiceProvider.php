@@ -12,11 +12,11 @@ class VoteServiceProvider extends ServiceProvider
     public function boot()
     {
         $this->publishes([
-            \dirname(__DIR__) . '/config/vote.php' => config_path('vote.php'),
+            \dirname(__DIR__).'/config/vote.php' => config_path('vote.php'),
         ], 'laravel-vote-config');
 
         $this->publishes([
-            \dirname(__DIR__) . '/migrations/' => database_path('migrations'),
+            \dirname(__DIR__).'/migrations/' => database_path('migrations'),
         ], 'laravel-vote-migrations');
     }
 
@@ -26,7 +26,7 @@ class VoteServiceProvider extends ServiceProvider
     public function register()
     {
         $this->mergeConfigFrom(
-            \dirname(__DIR__) . '/config/vote.php',
+            \dirname(__DIR__).'/config/vote.php',
             'vote'
         );
     }
