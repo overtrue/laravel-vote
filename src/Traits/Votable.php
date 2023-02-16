@@ -75,7 +75,7 @@ trait Votable
 
     public function getTotalVotesAttribute()
     {
-        return (int) $this->attributes['total_votes'] ?? $this->totalVotes();
+        return (int) ($this->attributes['total_votes'] ?? $this->totalVotes());
     }
 
     public function getTotalUpvotesAttribute()
