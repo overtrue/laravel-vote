@@ -31,6 +31,34 @@ trait Votable
         return false;
     }
 
+    public function hasBeenUpvotedBy(Model $user): bool
+    {
+        if (\is_a($user, config('auth.providers.users.model'))) {
+            if ($this->relationLoaded('upvoters')) {
+                return $this->upvoters->contains($user);
+            }
+
+            return ($this->relationLoaded('upvotes') ? $this->upvotes : $this->upvotes())
+                       ->where(\config('vote.user_foreign_key'), $user->getKey())->count() > 0;
+        }
+
+        return false;
+    }
+
+    public function hasBeenDownvotedBy(Model $user): bool
+    {
+        if (\is_a($user, config('auth.providers.users.model'))) {
+            if ($this->relationLoaded('down voters')) {
+                return $this->downvoters->contains($user);
+            }
+
+            return ($this->relationLoaded('downvotes') ? $this->downvotes : $this->downvotes())
+                       ->where(\config('vote.user_foreign_key'), $user->getKey())->count() > 0;
+        }
+
+        return false;
+    }
+
     public function votes(): \Illuminate\Database\Eloquent\Relations\MorphMany
     {
         return $this->morphMany(config('vote.vote_model'), 'votable');

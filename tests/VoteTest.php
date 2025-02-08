@@ -34,7 +34,12 @@ class VoteTest extends TestCase
         });
 
         $this->assertTrue($user->hasVoted($idea));
+        $this->assertTrue($user->hasUpvoted($idea));
+        $this->assertFalse($user->hasDownvoted($idea));
+
         $this->assertTrue($idea->hasBeenVotedBy($user));
+        $this->assertTrue($idea->hasBeenUpvotedBy($user));
+        $this->assertFalse($idea->hasBeenDownvotedBy($user));
     }
 
     public function test_user_can_down_vote_for_votable()
@@ -55,7 +60,12 @@ class VoteTest extends TestCase
         });
 
         $this->assertTrue($user->hasVoted($idea));
+        $this->assertFalse($user->hasUpvoted($idea));
+        $this->assertTrue($user->hasDownvoted($idea));
+
         $this->assertTrue($idea->hasBeenVotedBy($user));
+        $this->assertFalse($idea->hasBeenUpvotedBy($user));
+        $this->assertTrue($idea->hasBeenDownvotedBy($user));
     }
 
     public function test_user_can_cancel_vote_for_votable()
@@ -71,6 +81,39 @@ class VoteTest extends TestCase
         $this->assertTrue($idea->hasBeenVotedBy($user));
 
         $user->cancelVote($idea);
+
+        $this->assertFalse($user->hasVoted($idea));
+        $this->assertFalse($idea->hasBeenVotedBy($user));
+    }
+
+    public function test_user_can_toggle_vote_for_votable()
+    {
+        /* @var \Tests\User $user */
+        $user = User::create(['name' => 'overtrue']);
+        /* @var \Tests\Idea $idea */
+        $idea = Idea::create(['title' => 'Add custom votes support']);
+
+        $user->toggleVote($idea, 1);
+
+        $this->assertTrue($user->hasVoted($idea));
+        $this->assertTrue($user->hasUpvoted($idea));
+        $this->assertFalse($user->hasDownvoted($idea));
+
+        $this->assertTrue($idea->hasBeenVotedBy($user));
+        $this->assertTrue($idea->hasBeenUpvotedBy($user));
+        $this->assertFalse($idea->hasBeenDownvotedBy($user));
+
+        $user->toggleVote($idea, -1);
+
+        $this->assertTrue($user->hasVoted($idea));
+        $this->assertTrue($user->hasDownvoted($idea));
+        $this->assertFalse($user->hasUpvoted($idea));
+
+        $this->assertTrue($idea->hasBeenVotedBy($user));
+        $this->assertTrue($idea->hasBeenDownvotedBy($user));
+        $this->assertFalse($idea->hasBeenUpvotedBy($user));
+
+        $user->toggleVote($idea, -1);
 
         $this->assertFalse($user->hasVoted($idea));
         $this->assertFalse($idea->hasBeenVotedBy($user));

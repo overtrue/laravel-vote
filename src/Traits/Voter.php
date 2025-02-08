@@ -18,6 +18,15 @@ trait Voter
         return $votes > 0 ? $this->upvote($object, $votes) : $this->downvote($object, $votes);
     }
 
+    public function toggleVote(Model $object, int $votes = 1)
+    {
+        if ($this->hasVoted($object, $votes)) {
+            $this->cancelVote($object);
+        } else {
+            $this->vote($object, $votes);
+        }
+    }
+
     public function upvote(Model $object, int $votes = 1)
     {
         /* @var Votable|Model $object */
@@ -100,12 +109,23 @@ trait Voter
         return true;
     }
 
-    public function hasVoted(Model $object): bool
+    public function hasVoted(Model $object, ?int $votes = null): bool
     {
         return ($this->relationLoaded('votes') ? $this->votes : $this->votes())
                 ->where('votable_id', $object->getKey())
                 ->where('votable_type', $object->getMorphClass())
+                ->when($votes, fn($q) => $q->where('votes', $votes))
                 ->count() > 0;
+    }
+
+    public function hasUpvoted(Model $object): bool
+    {
+        return $this->hasVoted($object, 1);
+    }
+
+    public function hasDownvoted(Model $object): bool
+    {
+        return $this->hasVoted($object, -1);
     }
 
     public function votes(): \Illuminate\Database\Eloquent\Relations\HasMany
