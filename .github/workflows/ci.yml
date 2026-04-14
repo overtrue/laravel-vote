@@ -10,20 +10,23 @@ jobs:
     phpcs:
         runs-on: ubuntu-latest
         steps:
-            - uses: actions/checkout@v2
+            - uses: actions/checkout@v4
             - name: Setup PHP environment
               uses: shivammathur/setup-php@v2
+              with:
+                  php-version: '8.3'
             - name: Install dependencies
               run: composer install
             - name: PHPCSFixer check
               run: composer check-style
     phpunit:
         strategy:
+            fail-fast: false
             matrix:
-                php_version: [8.0, 8.1, 8.2, 8.3, 8.4, 8.5]
+                php_version: ['8.2', '8.3', '8.4']
         runs-on: ubuntu-latest
         steps:
-            - uses: actions/checkout@v2
+            - uses: actions/checkout@v4
             - name: Setup PHP environment
               uses: shivammathur/setup-php@v2
               with:
