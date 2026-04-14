@@ -3,13 +3,16 @@
 namespace Overtrue\LaravelVote\Traits;
 
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 /**
- * @property \Illuminate\Database\Eloquent\Collection $voters
- * @property \Illuminate\Database\Eloquent\Collection $votes
+ * @property Collection $voters
+ * @property Collection $votes
  *
- * @method bool   relationLoaded(string $name)
+ * @method bool relationLoaded(string $name)
  * @method static withVotesAttributes()
  * @method static withTotalVotes()
  * @method static withTotalUpvotes()
@@ -25,7 +28,7 @@ trait Votable
             }
 
             return ($this->relationLoaded('votes') ? $this->votes : $this->votes())
-                    ->where(\config('vote.user_foreign_key'), $user->getKey())->count() > 0;
+                ->where(\config('vote.user_foreign_key'), $user->getKey())->count() > 0;
         }
 
         return false;
@@ -39,7 +42,7 @@ trait Votable
             }
 
             return ($this->relationLoaded('upvotes') ? $this->upvotes : $this->upvotes())
-                       ->where(\config('vote.user_foreign_key'), $user->getKey())->count() > 0;
+                ->where(\config('vote.user_foreign_key'), $user->getKey())->count() > 0;
         }
 
         return false;
@@ -53,23 +56,23 @@ trait Votable
             }
 
             return ($this->relationLoaded('downvotes') ? $this->downvotes : $this->downvotes())
-                       ->where(\config('vote.user_foreign_key'), $user->getKey())->count() > 0;
+                ->where(\config('vote.user_foreign_key'), $user->getKey())->count() > 0;
         }
 
         return false;
     }
 
-    public function votes(): \Illuminate\Database\Eloquent\Relations\MorphMany
+    public function votes(): MorphMany
     {
         return $this->morphMany(config('vote.vote_model'), 'votable');
     }
 
-    public function upvotes(): \Illuminate\Database\Eloquent\Relations\MorphMany
+    public function upvotes(): MorphMany
     {
         return $this->votes()->where('votes', '>', 0);
     }
 
-    public function downvotes(): \Illuminate\Database\Eloquent\Relations\MorphMany
+    public function downvotes(): MorphMany
     {
         return $this->votes()->where('votes', '<', 0);
     }
@@ -84,12 +87,12 @@ trait Votable
         )->where('votable_type', $this->getMorphClass())->withPivot(['votes']);
     }
 
-    public function upvoters(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    public function upvoters(): BelongsToMany
     {
         return $this->voters()->where('votes', '>', 0);
     }
 
-    public function downvoters(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    public function downvoters(): BelongsToMany
     {
         return $this->voters()->where('votes', '<', 0);
     }
@@ -133,22 +136,19 @@ trait Votable
 
     public function scopeWithTotalVotes(Builder $builder): Builder
     {
-        return $builder->withSum(['votes as total_votes' =>
-            fn ($q) => $q->select(\DB::raw('COALESCE(SUM(votes), 0)'))
+        return $builder->withSum(['votes as total_votes' => fn ($q) => $q->select(\DB::raw('COALESCE(SUM(votes), 0)')),
         ], 'votes');
     }
 
     public function scopeWithTotalUpvotes(Builder $builder): Builder
     {
-        return $builder->withSum(['votes as total_upvotes' =>
-            fn ($q) => $q->where('votes', '>', 0)->select(\DB::raw('COALESCE(SUM(votes), 0)'))
+        return $builder->withSum(['votes as total_upvotes' => fn ($q) => $q->where('votes', '>', 0)->select(\DB::raw('COALESCE(SUM(votes), 0)')),
         ], 'votes');
     }
 
     public function scopeWithTotalDownvotes(Builder $builder): Builder
     {
-        return $builder->withSum(['votes as total_downvotes' =>
-            fn ($q) => $q->where('votes', '<', 0)->select(\DB::raw('COALESCE(SUM(votes), 0)'))
+        return $builder->withSum(['votes as total_downvotes' => fn ($q) => $q->where('votes', '<', 0)->select(\DB::raw('COALESCE(SUM(votes), 0)')),
         ], 'votes');
     }
 

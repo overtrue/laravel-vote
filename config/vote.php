@@ -1,5 +1,7 @@
 <?php
 
+use Overtrue\LaravelVote\Vote;
+
 return [
     /**
      * Use uuid as primary key.
@@ -24,5 +26,5 @@ return [
     /*
      * Model name for Vote record.
      */
-    'vote_model' => \Overtrue\LaravelVote\Vote::class,
+    'vote_model' => Vote::class,
 ];

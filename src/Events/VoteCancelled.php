@@ -2,6 +2,4 @@
 
 namespace Overtrue\LaravelVote\Events;
 
-class VoteCancelled extends Event
-{
-}
+class VoteCancelled extends Event {}

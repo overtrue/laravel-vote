@@ -2,12 +2,13 @@
 
 namespace Tests;
 
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Event;
 use Overtrue\LaravelVote\Events\Voted;
 
 class VoteTest extends TestCase
 {
-    public function setUp(): void
+    protected function setUp(): void
     {
         parent::setUp();
 
@@ -303,7 +304,7 @@ class VoteTest extends TestCase
         $this->assertEmpty($sqls->all());
     }
 
-    protected function getQueryLog(\Closure $callback): \Illuminate\Support\Collection
+    protected function getQueryLog(\Closure $callback): Collection
     {
         $sqls = \collect([]);
         \DB::listen(function ($query) use ($sqls) {

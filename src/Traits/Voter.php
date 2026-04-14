@@ -4,6 +4,7 @@ namespace Overtrue\LaravelVote\Traits;
 
 use Illuminate\Contracts\Pagination\Paginator;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 use Overtrue\LaravelVote\Vote;
@@ -112,10 +113,10 @@ trait Voter
     public function hasVoted(Model $object, ?int $votes = null): bool
     {
         return ($this->relationLoaded('votes') ? $this->votes : $this->votes())
-                ->where('votable_id', $object->getKey())
-                ->where('votable_type', $object->getMorphClass())
-                ->when($votes, fn($q) => $q->where('votes', $votes))
-                ->count() > 0;
+            ->where('votable_id', $object->getKey())
+            ->where('votable_type', $object->getMorphClass())
+            ->when($votes, fn ($q) => $q->where('votes', $votes))
+            ->count() > 0;
     }
 
     public function hasUpvoted(Model $object): bool
@@ -128,17 +129,17 @@ trait Voter
         return $this->hasVoted($object, -1);
     }
 
-    public function votes(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function votes(): HasMany
     {
         return $this->hasMany(config('vote.vote_model'), config('vote.user_foreign_key'), $this->getKeyName());
     }
 
-    public function upvotes(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function upvotes(): HasMany
     {
         return $this->votes()->where('votes', '>', 0);
     }
 
-    public function downvotes(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function downvotes(): HasMany
     {
         return $this->votes()->where('votes', '<', 0);
     }

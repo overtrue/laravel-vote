@@ -4,20 +4,22 @@ namespace Overtrue\LaravelVote;
 
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Support\Str;
 use Overtrue\LaravelVote\Events\VoteCancelled;
 use Overtrue\LaravelVote\Events\Voted;
 
 /**
- * @property string|int                          $user_id
- * @property string                              $votable_id
- * @property string                              $votable_type
- * @property int                                 $votes
- * @property bool                                $is_up_vote
- * @property bool                                $is_down_vote
- * @property \Illuminate\Database\Eloquent\Model $user
- * @property \Illuminate\Database\Eloquent\Model $voter
- * @property \Illuminate\Database\Eloquent\Model $votable
+ * @property string|int $user_id
+ * @property string $votable_id
+ * @property string $votable_type
+ * @property int $votes
+ * @property bool $is_up_vote
+ * @property bool $is_down_vote
+ * @property Model $user
+ * @property Model $voter
+ * @property Model $votable
  */
 class Vote extends Model
 {
@@ -61,17 +63,17 @@ class Vote extends Model
         });
     }
 
-    public function votable(): \Illuminate\Database\Eloquent\Relations\MorphTo
+    public function votable(): MorphTo
     {
         return $this->morphTo();
     }
 
-    public function user(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    public function user(): BelongsTo
     {
         return $this->belongsTo(\config('auth.providers.users.model'), \config('vote.user_foreign_key'));
     }
 
-    public function voter(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    public function voter(): BelongsTo
     {
         return $this->user();
     }
